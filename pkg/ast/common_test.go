@@ -1,6 +1,8 @@
 package ast
 
-import "testing"
+import (
+	"testing"
+)
 
 func Test_FindFuncDeclByName_FuncExists_ShouldReturn(t *testing.T) {
 	// arrange

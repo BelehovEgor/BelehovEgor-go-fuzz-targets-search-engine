@@ -9,7 +9,7 @@ import (
 
 func Test_CalculateDimensions_FuncsExist_ShouldCalculateForAll(t *testing.T) {
 	// arrange
-	code := Code(`
+	code := `
 	package test
 
     func exampleFunction(a int, b int) int {
@@ -22,10 +22,10 @@ func Test_CalculateDimensions_FuncsExist_ShouldCalculateForAll(t *testing.T) {
         }
     }
 		
-	func simple() {}`)
+	func simple() {}`
 
 	// act
-	dimensions, err := code.CalculateDimensions()
+	dimensions, err := CalculateComplexities(code)
 
 	if err != nil {
 		t.Fatalf("Error should be nil")
@@ -39,7 +39,7 @@ func Test_CalculateDimensions_FuncsExist_ShouldCalculateForAll(t *testing.T) {
 func Test_CalculateDimension_FuncDoesNotExists_ShouldReturnError(t *testing.T) {
 	// arrange
 	funcName := "someFunc"
-	code := Code(`
+	code := `
 	package test
 
     func exampleFunction(a int, b int) int {
@@ -50,10 +50,10 @@ func Test_CalculateDimension_FuncDoesNotExists_ShouldReturnError(t *testing.T) {
         } else {
             return a + b
         }
-    }`)
+    }`
 
 	// act
-	_, err := code.CalculateDimension(funcName)
+	_, err := CalculateComplexity(code, funcName)
 
 	if err.Error() != "function with name 'someFunc' not found" {
 		t.Fatalf("Invalid result")
@@ -63,7 +63,7 @@ func Test_CalculateDimension_FuncDoesNotExists_ShouldReturnError(t *testing.T) {
 func Test_CalculateDimension_FuncExists_ShouldCalculate(t *testing.T) {
 	// arrange
 	funcName := "exampleFunction"
-	code := Code(`
+	code := `
 	package test
 
     func exampleFunction(a int, b int) int {
@@ -74,10 +74,10 @@ func Test_CalculateDimension_FuncExists_ShouldCalculate(t *testing.T) {
         } else {
             return a + b
         }
-    }`)
+    }`
 
 	// act
-	dimension, err := code.CalculateDimension(funcName)
+	dimension, err := CalculateComplexity(code, funcName)
 
 	if err != nil {
 		t.Fatalf("Error should be nil")
@@ -85,72 +85,6 @@ func Test_CalculateDimension_FuncExists_ShouldCalculate(t *testing.T) {
 
 	if dimension.Name != funcName {
 		t.Fatalf("Invalid function returned")
-	}
-}
-
-func Test_FindFuncDeclByName_FuncExists_ShouldReturn(t *testing.T) {
-	// arrange
-	funcName := "exampleFunction"
-	code := Code(`
-	package test
-
-    func exampleFunction(a int, b int) int {
-        if a > b {
-            return a
-        } else if a < b {
-            return b
-        } else {
-            return a + b
-        }
-    }`)
-
-	file, err := parseFile(code)
-	if err != nil {
-		t.Fatalf("Error should be nil")
-	}
-
-	// act
-	result, err := findFuncDeclByName(file, funcName)
-
-	if err != nil {
-		t.Fatalf("Error should be nil")
-	}
-
-	if result.Name.Name != funcName {
-		t.Fatalf("Invalid function returned")
-	}
-}
-
-func Test_FindFuncDeclByName_FuncDoesNotExist_ShouldReturnError(t *testing.T) {
-	// arrange
-	funcName := "someName"
-	code := Code(`
-	package test
-
-    func exampleFunction(a int, b int) int {
-        if a > b {
-            return a
-        } else if a < b {
-            return b
-        } else {
-            return a + b
-        }
-    }`)
-
-	file, err := parseFile(code)
-	if err != nil {
-		t.Fatalf("Error should be nil")
-	}
-
-	// act
-	_, err = findFuncDeclByName(file, funcName)
-
-	if err == nil {
-		t.Errorf("Error should not be nil")
-	}
-
-	if err.Error() != "function with name 'someName' not found" {
-		t.Errorf("Invalid error message")
 	}
 }
 

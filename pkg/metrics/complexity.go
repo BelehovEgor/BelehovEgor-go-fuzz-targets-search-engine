@@ -1,22 +1,18 @@
 package metrics
 
 import (
-	"fmt"
 	ast "go/ast"
-	"go/parser"
 	"go/token"
 
 	myAst "github.com/BelehovEgor/go-fuzz-targets-search-engine/pkg/ast"
 )
 
-type Code string
-
-type Dimension struct {
+type Complexity struct {
 	// Func info
 	Name string
 
 	// Functions
-	cyclomatic_complexity int
+	cyclomatic int
 
 	// Loops
 	number_of_loops                int
@@ -24,98 +20,52 @@ type Dimension struct {
 	maximum_nesting_level_of_loops int
 }
 
-func (code Code) CalculateDimensions() ([]*Dimension, error) {
-	f, err := parseFile(code)
+func CalculateComplexities(code string) ([]*Complexity, error) {
+	f, err := myAst.ParseFile(code)
 	if err != nil {
 		return nil, err
 	}
 
-	var dimensions = make([]*Dimension, 0)
-	for _, target := range findFuncDecls(f) {
-		dimension, err := calculateDimension(target)
+	var complexity = make([]*Complexity, 0)
+	for _, target := range myAst.FindFuncDecls(f) {
+		dimension, err := calculateComplexity(target)
 		if err != nil {
 			return nil, err
 		}
 
-		dimensions = append(dimensions, dimension)
+		complexity = append(complexity, dimension)
 	}
 
-	return dimensions, nil
+	return complexity, nil
 }
 
-func (code Code) CalculateDimension(funcName string) (*Dimension, error) {
-	f, err := parseFile(code)
+func CalculateComplexity(code string, funcName string) (*Complexity, error) {
+	f, err := myAst.ParseFile(code)
 	if err != nil {
 		return nil, err
 	}
 
-	targetFunc, err := findFuncDeclByName(f, funcName)
+	targetFunc, err := myAst.FindFuncDeclByName(f, funcName)
 	if err != nil {
 		return nil, err
 	}
 
-	return calculateDimension(targetFunc)
+	return calculateComplexity(targetFunc)
 }
 
-func calculateDimension(targetFunc *ast.FuncDecl) (*Dimension, error) {
-	var dimension *Dimension = &Dimension{}
+func calculateComplexity(targetFunc *ast.FuncDecl) (*Complexity, error) {
+	var complexity *Complexity = &Complexity{}
 
-	dimension.Name = targetFunc.Name.Name
+	complexity.Name = targetFunc.Name.Name
 
-	dimension.cyclomatic_complexity = calculateCyclomaticComplexity(targetFunc)
-	dimension.number_of_loops = countCycles(targetFunc)
+	complexity.cyclomatic = calculateCyclomaticComplexity(targetFunc)
+	complexity.number_of_loops = countCycles(targetFunc)
 
 	countNestedLoops, maxDepth := countNestedLoops(targetFunc)
-	dimension.number_of_nested_loops = countNestedLoops
-	dimension.maximum_nesting_level_of_loops = maxDepth
+	complexity.number_of_nested_loops = countNestedLoops
+	complexity.maximum_nesting_level_of_loops = maxDepth
 
-	return dimension, nil
-}
-
-func parseFile(code Code) (*ast.File, error) {
-	fset := token.NewFileSet()
-	return parser.ParseFile(fset, "", string(code), 0)
-}
-
-func findFuncDecls(file *ast.File) []*ast.FuncDecl {
-	foundFuncs := make([]*ast.FuncDecl, 0)
-
-	ast.Inspect(file, func(node ast.Node) bool {
-		decl, ok := node.(*ast.FuncDecl)
-		if !ok {
-			return true
-		}
-
-		foundFuncs = append(foundFuncs, decl)
-
-		return true
-	})
-
-	return foundFuncs
-}
-
-func findFuncDeclByName(file *ast.File, funcName string) (*ast.FuncDecl, error) {
-	var foundFunc *ast.FuncDecl
-
-	ast.Inspect(file, func(node ast.Node) bool {
-		decl, ok := node.(*ast.FuncDecl)
-		if !ok {
-			return true
-		}
-
-		if decl.Name.Name == funcName {
-			foundFunc = decl
-			return false
-		}
-
-		return true
-	})
-
-	if foundFunc == nil {
-		return nil, fmt.Errorf("function with name '%s' not found", funcName)
-	}
-
-	return foundFunc, nil
+	return complexity, nil
 }
 
 func calculateCyclomaticComplexity(f *ast.FuncDecl) int {

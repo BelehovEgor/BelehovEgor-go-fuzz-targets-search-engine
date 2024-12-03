@@ -29,6 +29,25 @@ func FindFuncDecls(file *ast.File) []*ast.FuncDecl {
 	return foundFuncs
 }
 
+func FindFilesFuncDecls(files []*ast.File) []*ast.FuncDecl {
+	foundFuncs := make([]*ast.FuncDecl, 0)
+
+	for _, file := range files {
+		ast.Inspect(file, func(node ast.Node) bool {
+			decl, ok := node.(*ast.FuncDecl)
+			if !ok {
+				return true
+			}
+
+			foundFuncs = append(foundFuncs, decl)
+
+			return true
+		})
+	}
+
+	return foundFuncs
+}
+
 func FindFuncDeclByName(file *ast.File, funcName string) (*ast.FuncDecl, error) {
 	var foundFunc *ast.FuncDecl
 

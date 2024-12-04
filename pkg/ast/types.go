@@ -8,7 +8,7 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-func GetPackage(folder, packageName string) (*packages.Package, error) {
+func GetPackages(folder string) ([]*packages.Package, error) {
 	cfg := &packages.Config{
 		Dir:  folder,
 		Mode: packages.NeedName | packages.NeedTypes | packages.NeedTypesInfo | packages.NeedSyntax,
@@ -17,6 +17,15 @@ func GetPackage(folder, packageName string) (*packages.Package, error) {
 	pkgs, err := packages.Load(cfg, "./...")
 	if err != nil {
 		return nil, fmt.Errorf("load packages error: %v", err)
+	}
+
+	return pkgs, nil
+}
+
+func GetPackage(folder, packageName string) (*packages.Package, error) {
+	pkgs, err := GetPackages(folder)
+	if err != nil {
+		return nil, err
 	}
 
 	var searchedPackage *packages.Package

@@ -5,6 +5,7 @@ import (
 	"go/token"
 
 	myAst "github.com/BelehovEgor/go-fuzz-targets-search-engine/pkg/ast"
+	"golang.org/x/tools/go/packages"
 )
 
 type Complexity struct {
@@ -18,6 +19,37 @@ type Complexity struct {
 	number_of_loops                int
 	number_of_nested_loops         int
 	maximum_nesting_level_of_loops int
+}
+
+func (comp Complexity) GetName() string {
+	return comp.Name
+}
+
+func (comp Complexity) GetScore() int {
+	return comp.cyclomatic + comp.number_of_loops + comp.number_of_nested_loops + comp.maximum_nesting_level_of_loops
+}
+
+func CalculateComplexitiesFromPackage(pkg *packages.Package) ([]Rankable, error) {
+	var complexity = make([]Rankable, 0)
+	for _, target := range myAst.GetFuncs(pkg) {
+		dimension, err := calculateComplexity(target)
+		if err != nil {
+			return nil, err
+		}
+
+		complexity = append(complexity, dimension)
+	}
+
+	return complexity, nil
+}
+
+func CalculateComplexityFromPackage(pkg *packages.Package, funcName string) (*Complexity, error) {
+	targetFunc, err := myAst.GetFunc(pkg, funcName)
+	if err != nil {
+		return nil, err
+	}
+
+	return calculateComplexity(targetFunc)
 }
 
 func CalculateComplexities(code string) ([]*Complexity, error) {

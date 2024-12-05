@@ -10,7 +10,8 @@ import (
 
 type Complexity struct {
 	// Func info
-	Name string
+	Package string
+	Name    string
 
 	// Functions
 	cyclomatic int
@@ -19,6 +20,10 @@ type Complexity struct {
 	number_of_loops                int
 	number_of_nested_loops         int
 	maximum_nesting_level_of_loops int
+}
+
+func (comp Complexity) GetPackage() string {
+	return comp.Package
 }
 
 func (comp Complexity) GetName() string {
@@ -32,7 +37,7 @@ func (comp Complexity) GetScore() int {
 func CalculateComplexitiesFromPackage(pkg *packages.Package) ([]Rankable, error) {
 	var complexity = make([]Rankable, 0)
 	for _, target := range myAst.GetFuncs(pkg) {
-		dimension, err := calculateComplexity(target)
+		dimension, err := calculateComplexity(target, pkg)
 		if err != nil {
 			return nil, err
 		}
@@ -49,46 +54,14 @@ func CalculateComplexityFromPackage(pkg *packages.Package, funcName string) (*Co
 		return nil, err
 	}
 
-	return calculateComplexity(targetFunc)
+	return calculateComplexity(targetFunc, pkg)
 }
 
-func CalculateComplexities(code string) ([]*Complexity, error) {
-	f, err := myAst.ParseFile(code)
-	if err != nil {
-		return nil, err
+func calculateComplexity(targetFunc *ast.FuncDecl, pkg *packages.Package) (*Complexity, error) {
+	var complexity *Complexity = &Complexity{
+		Package: pkg.PkgPath,
+		Name:    targetFunc.Name.Name,
 	}
-
-	var complexity = make([]*Complexity, 0)
-	for _, target := range myAst.FindFuncDecls(f) {
-		dimension, err := calculateComplexity(target)
-		if err != nil {
-			return nil, err
-		}
-
-		complexity = append(complexity, dimension)
-	}
-
-	return complexity, nil
-}
-
-func CalculateComplexity(code string, funcName string) (*Complexity, error) {
-	f, err := myAst.ParseFile(code)
-	if err != nil {
-		return nil, err
-	}
-
-	targetFunc, err := myAst.FindFuncDeclByName(f, funcName)
-	if err != nil {
-		return nil, err
-	}
-
-	return calculateComplexity(targetFunc)
-}
-
-func calculateComplexity(targetFunc *ast.FuncDecl) (*Complexity, error) {
-	var complexity *Complexity = &Complexity{}
-
-	complexity.Name = targetFunc.Name.Name
 
 	complexity.cyclomatic = calculateCyclomaticComplexity(targetFunc)
 	complexity.number_of_loops = countCycles(targetFunc)

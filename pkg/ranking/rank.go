@@ -8,17 +8,23 @@ import (
 )
 
 type Priority struct {
+	Package  string
 	Name     string
 	Rank     int
 	Priority int
 }
 
-func Prioritize(rankabels []metrics.Rankable, top int) []Priority {
+func Prioritize(rankabels []metrics.Rankable, top uint) []Priority {
 	sort.Slice(rankabels, func(i, j int) bool {
 		return rankabels[i].GetScore() > rankabels[j].GetScore()
 	})
 
-	priorities := make([]Priority, min(top, len(rankabels)))
+	priorities := make([]Priority, min(int(top), len(rankabels)))
+
+	if len(priorities) == 0 {
+		return priorities
+	}
+
 	currentScore := rankabels[0].GetScore()
 	currentRank := 1
 	for i := 0; i < len(priorities); i++ {
@@ -29,8 +35,9 @@ func Prioritize(rankabels []metrics.Rankable, top int) []Priority {
 		}
 
 		priorities[i] = Priority{
-			Name: rankabels[i].GetName(),
-			Rank: currentRank,
+			Package: rankabels[i].GetPackage(),
+			Name:    rankabels[i].GetName(),
+			Rank:    currentRank,
 		}
 	}
 

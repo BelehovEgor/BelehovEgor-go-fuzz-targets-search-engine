@@ -17,7 +17,7 @@ There are merics that implemented:
         + Cyclomatic complexity
     + Loop Structures
         + Number of loops
-        + Loop Structures C3 #ofnested loops
+        + Number of nested loops
         + Maximumnesting level of loops
 + Vulnerability Metrics
     + Dependency

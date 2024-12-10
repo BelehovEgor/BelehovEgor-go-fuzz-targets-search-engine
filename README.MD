@@ -2,6 +2,8 @@
 
 A utility for searching and prioritizing targets for fuzzing. The level of granularity is a function.
 
+The project must have `.mod` and `.sum` files.
+
 ## Implemented Algorithms
 
 ### Metrics based
@@ -47,6 +49,8 @@ It is console application with this arguments:
 
 ## Examples of using
 
+These are examples of running a program with projects, search parameters and their results. Be prepared: the larger the project, the longer the search.
+
 ### https://github.com/kataras/go-serializer
 
 #### Input
@@ -58,7 +62,11 @@ It is console application with this arguments:
 #### Output
 
 ```
-
+Package: go-serializer, Name: Serialize, Priority: 100
+Package: go-serializer/json, Name: Serialize, Priority: 97
+Package: go-serializer/jsonp, Name: Serialize, Priority: 94
+Package: go-serializer, Name: For, Priority: 90
+Package: go-serializer/xml, Name: Serialize, Priority: 87
 ```
 
 ### https://github.com/google/syzkaller

@@ -34,9 +34,9 @@ func (comp Complexity) GetScore() int {
 	return comp.cyclomatic + comp.number_of_loops + comp.number_of_nested_loops + comp.maximum_nesting_level_of_loops
 }
 
-func CalculateComplexitiesFromPackage(pkg *packages.Package) ([]Rankable, error) {
+func CalculateComplexitiesFromPackage(pkg *packages.Package, onlyExported bool) ([]Rankable, error) {
 	var complexity = make([]Rankable, 0)
-	for _, target := range myAst.GetFuncs(pkg) {
+	for _, target := range myAst.GetFuncs(pkg, onlyExported) {
 		dimension, err := calculateComplexity(target, pkg)
 		if err != nil {
 			return nil, err

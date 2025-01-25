@@ -17,10 +17,11 @@ const (
 )
 
 func main() {
-	folder := flag.String("folder", "", "Your name")
+	packagePattern := flag.String("pattern", "", "Your pattern")
 	packageName := flag.String("package", "", "Your package")
 	algorithm := flag.String("algorithm", Volnerability, "Ranking algorithm")
 	top := flag.Uint("top", 5, "Count target funcs")
+	onlyExported := flag.Bool("only-exported", true, "Searching all funcs or only exported")
 
 	flag.Parse()
 
@@ -33,15 +34,15 @@ func main() {
 	var funcs []metrics.Rankable
 	if *packageName != "" {
 		var pkg *packages.Package
-		pkg, err = myAst.GetPackage(*folder, *packageName)
+		pkg, err = myAst.GetPackage(*packagePattern, *packageName)
 		if err == nil {
-			funcs, err = getFuncs(*algorithm, pkg)
+			funcs, err = getFuncs(*algorithm, pkg, *onlyExported)
 		}
 	} else {
 		var pkgs []*packages.Package
-		pkgs, err = myAst.GetPackages(*folder)
+		pkgs, err = myAst.GetPackages(*packagePattern)
 		if err == nil {
-			funcs, err = getAllFuncs(*algorithm, pkgs)
+			funcs, err = getAllFuncs(*algorithm, pkgs, *onlyExported)
 		}
 	}
 
@@ -56,10 +57,10 @@ func main() {
 	}
 }
 
-func getAllFuncs(algorithm string, pkgs []*packages.Package) ([]metrics.Rankable, error) {
+func getAllFuncs(algorithm string, pkgs []*packages.Package, onlyExported bool) ([]metrics.Rankable, error) {
 	funcs := make([]metrics.Rankable, 0)
 	for _, pkg := range pkgs {
-		pkgFuncs, err := getFuncs(algorithm, pkg)
+		pkgFuncs, err := getFuncs(algorithm, pkg, onlyExported)
 		if err != nil {
 			return nil, err
 		}
@@ -70,15 +71,15 @@ func getAllFuncs(algorithm string, pkgs []*packages.Package) ([]metrics.Rankable
 	return funcs, nil
 }
 
-func getFuncs(algorithm string, pkg *packages.Package) ([]metrics.Rankable, error) {
+func getFuncs(algorithm string, pkg *packages.Package, onlyExported bool) ([]metrics.Rankable, error) {
 	var funcs []metrics.Rankable
 	var err error
 
 	switch algorithm {
 	case Complexity:
-		funcs, err = metrics.CalculateComplexitiesFromPackage(pkg)
+		funcs, err = metrics.CalculateComplexitiesFromPackage(pkg, onlyExported)
 	case Volnerability:
-		funcs, err = metrics.CalculateVulnerabilities(pkg)
+		funcs, err = metrics.CalculateVulnerabilities(pkg, onlyExported)
 	}
 
 	return funcs, err

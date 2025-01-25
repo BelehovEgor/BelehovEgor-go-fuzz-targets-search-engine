@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"go/ast"
 	"go/types"
+	"unicode"
 
 	"golang.org/x/tools/go/packages"
 )
 
-func GetPackages(folder string) ([]*packages.Package, error) {
+func GetPackages(packagePattern string) ([]*packages.Package, error) {
 	cfg := &packages.Config{
-		Dir:  folder,
 		Mode: packages.NeedName | packages.NeedTypes | packages.NeedTypesInfo | packages.NeedSyntax,
 	}
 
-	pkgs, err := packages.Load(cfg, "./...")
+	pkgs, err := packages.Load(cfg, packagePattern)
 	if err != nil {
 		return nil, fmt.Errorf("load packages error: %v", err)
 	}
@@ -22,8 +22,8 @@ func GetPackages(folder string) ([]*packages.Package, error) {
 	return pkgs, nil
 }
 
-func GetPackage(folder, packageName string) (*packages.Package, error) {
-	pkgs, err := GetPackages(folder)
+func GetPackage(packagePattern, packageName string) (*packages.Package, error) {
+	pkgs, err := GetPackages(packagePattern)
 	if err != nil {
 		return nil, err
 	}
@@ -43,13 +43,22 @@ func GetPackage(folder, packageName string) (*packages.Package, error) {
 	return searchedPackage, nil
 }
 
-func GetFuncs(pkg *packages.Package) []*ast.FuncDecl {
+func GetFuncs(pkg *packages.Package, onlyExported bool) []*ast.FuncDecl {
 	fdecls := make([]*ast.FuncDecl, 0)
 	for _, file := range pkg.Syntax {
 		ast.Inspect(file, func(node ast.Node) bool {
 			switch x := node.(type) {
 			case *ast.FuncDecl:
-				fdecls = append(fdecls, x)
+				if !onlyExported {
+					fdecls = append(fdecls, x)
+				} else {
+					if len(x.Name.Name) > 0 {
+						firstRune := rune(x.Name.Name[0])
+						if !unicode.IsLower(firstRune) {
+							fdecls = append(fdecls, x)
+						}
+					}
+				}
 			}
 			return true
 		})
